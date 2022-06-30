@@ -11,6 +11,8 @@ import streamlit as st
 
 logging.info('Starting n-grams')
 
+st.title("Н-граммы")
+
 rel_path = Path.cwd()
 logging.info("Onto model loading")
 nlp = spacy.load(rel_path / "model")
@@ -81,4 +83,17 @@ logging.info(f'Appropriate matches are found, onto projecting')
 output = Counter(matched_ngrams).most_common()[:100]
 sequences = [' '.join(i[0]) for i in output]
 frequencies = [i[1] for i in output]
-AgGrid(pd.DataFrame({'Вхождения': frequencies, 'Фрагменты': sequences}))
+resulting_df = pd.DataFrame({'Вхождения': frequencies, 'Фрагменты': sequences})
+AgGrid(resulting_df)
+
+
+# resulting_df.to_excel('table_temporary.xlsx', index=False, encoding='UTF-8')
+# with open('table_temporary.xlsx',) as my_file:
+#     st.download_button(label='Скачать как таблицу',
+#                        data=my_file,
+#                        file_name = f'ngrams_for_{query}.xlsx')
+st.download_button(
+     label="Скачать как таблицу",
+     data=resulting_df.to_csv(index=False, encoding='windows-1251'),
+     file_name=f'ngrams_for_{query}.csv'
+ )
