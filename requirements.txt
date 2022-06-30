@@ -1,0 +1,4 @@
+pandas
+pymorphy2
+spacy~=3.3.1
+streamlit-aggrid
