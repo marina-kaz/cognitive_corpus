@@ -20,6 +20,19 @@ nlp = spacy.load(rel_path / "model")
 logging.info("Onto corpus loading")
 doc_bin = DocBin().from_disk(rel_path / "corpora/corpus.spacy")
 docs = list(doc_bin.get_docs(nlp.vocab))
+
+# @st.cache
+# def load_resources(model_path, corpus_path):
+#     nlp = spacy.load(model_path)
+#     doc_bin = DocBin().from_disk(corpus_path)
+#     docs = list(doc_bin.get_docs(nlp.vocab))
+#     return nlp, docs
+
+# logging.info("Onto resource loading")
+# rel_path = Path.cwd()
+# model_path = rel_path / "model"
+# corpus_path = rel_path / "corpora" / "corpus.spacy"
+# nlp, docs = load_resources(model_path, corpus_path)
 logging.info("Loaded resources")
 
 query = st.text_input(
@@ -36,6 +49,17 @@ threshold = st.number_input(
     label="Токены с какой минимальной встречаемостью учитывать при подсчете мер ассоциации?",
     value=30
 )
+
+condition = st.selectbox(
+                         'Какое положение искомого токена учитывать?',
+                         ('любое положение',
+                          'токен должен быть только слева',
+                          'токен должен быть только справа'),
+                          )
+
+condition = {'токен должен быть только слева': 'left_only',
+             'токен должен быть только справа': 'right_only',
+             'любое положение': 'both'}[condition]
 
 to_sort_by = st.selectbox(
                          'По какой мере ассоциации отсортировать выдачу?',
@@ -119,6 +143,15 @@ bigrams_filtered = [collocation for collocation in bigrams
                     if not is_collocation_corrupted(collocation)]
 collocation_occurences = Counter(bigrams_filtered)
 
+def is_collocation_acceptable(collocation, condition):
+  if not condition in ['left_only', 'right_only', 'both']:
+    raise ValueError
+  if condition == 'left_only':
+    return True if collocation[0] == query_lemma else False
+  if condition == 'right_only':
+    return True if collocation[-1] == query_lemma else False
+  if condition == 'both':
+    return True
 
 def get_score(collocation, score='mi'):
     f_n_c = collocation_occurences[collocation]
@@ -140,15 +173,20 @@ def get_score(collocation, score='mi'):
 
 
 mi_scores = [get_score(collocation, score='mi')
-             for collocation in collocation_occurences]
+             for collocation in collocation_occurences.keys()
+             if is_collocation_acceptable(collocation, condition)]
 t_scores = [get_score(collocation, score='t')
-            for collocation in collocation_occurences]
+            for collocation in collocation_occurences.keys()
+            if is_collocation_acceptable(collocation, condition)]
 dice_scores = [get_score(collocation, score='dice')
-               for collocation in collocation_occurences]
+               for collocation in collocation_occurences.keys()
+               if is_collocation_acceptable(collocation, condition)]
 
 logging.info(f'Scores calculated, onto projecting')
 
-df = pd.DataFrame({'коллокация': [' + '.join(collocation) for collocation in collocation_occurences.keys()],
+df = pd.DataFrame({'коллокация': [' + '.join(collocation)
+                                  for collocation in collocation_occurences.keys()
+                                  if is_collocation_acceptable(collocation, condition)],
                    'MI': mi_scores,
                    't-score': t_scores,
                    'Dice': dice_scores})
