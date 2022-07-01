@@ -19,7 +19,7 @@ nlp = spacy.load(rel_path / "model")
 logging.info("Onto corpus loading")
 doc_bin = DocBin().from_disk(rel_path / "corpora/corpus.spacy")
 docs = list(doc_bin.get_docs(nlp.vocab))
-print("Loaded resources")
+logging.info("Loaded resources")
 
 query = st.text_input(
     label="Введите слово/фразу для поиска по n-граммам",
@@ -87,13 +87,8 @@ resulting_df = pd.DataFrame({'Вхождения': frequencies, 'Фрагмен�
 AgGrid(resulting_df)
 
 
-# resulting_df.to_excel('table_temporary.xlsx', index=False, encoding='UTF-8')
-# with open('table_temporary.xlsx',) as my_file:
-#     st.download_button(label='Скачать как таблицу',
-#                        data=my_file,
-#                        file_name = f'ngrams_for_{query}.xlsx')
 st.download_button(
      label="Скачать как таблицу",
      data=resulting_df.to_csv(index=False, encoding='windows-1251'),
-     file_name=f'ngrams_for_{query}.csv'
+     file_name=f'ngrams_for_{" ".join(query.split())}.csv'
  )

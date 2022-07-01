@@ -19,7 +19,7 @@ nlp = spacy.load(rel_path / "model")
 logging.info("Onto corpus loading")
 doc_bin = DocBin().from_disk(rel_path / "corpora/corpus.spacy")
 docs = list(doc_bin.get_docs(nlp.vocab))
-print("Loaded resources")
+logging.info("Loaded resources")
 
 conc_phrase = st.text_input(
     label="Введите слово/фразу для поиска по конкордансу",
@@ -67,3 +67,8 @@ conc_df = pd.DataFrame(conc_items, columns=["Левый контекст", "Сл
                                             "Правый контекст", "Источник"])
 AgGrid(conc_df)
 st.write(f'Найдено {conc_df.shape[0]} вхождений')
+st.download_button(
+     label="Скачать как таблицу",
+     data=conc_df.to_csv(index=False),
+     file_name=f'contexts_for_{" ".join(" ".join(conc_phrase.split()).split())}.csv'
+ )
