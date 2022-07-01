@@ -32,6 +32,11 @@ consider_punctuation = st.checkbox('Учитывать пунктуацию')
 consider_digits = st.checkbox('Учитывать цифры')
 consider_stop_words = st.checkbox('Учитывать стоп-слова')
 
+threshold = st.number_input(
+    label="Токены с какой минимальной встречаемостью учитывать при подсчете мер ассоциации?",
+    value=30
+)
+
 to_sort_by = st.selectbox(
                          'По какой мере ассоциации отсортировать выдачу?',
                          ('MI', 't-score', 'Dice')
@@ -101,7 +106,18 @@ logging.info(f'Appropriate matches are found, onto scores calculating')
 all_tokens = []
 _ = [all_tokens.extend([token.lemma_ for token in get_relevant_doc(doc)]) for doc in docs]
 counterparts_occurences = Counter(all_tokens)
-collocation_occurences = Counter(bigrams)
+
+
+def is_collocation_corrupted(collocation):
+  if collocation[0] == query_lemma:
+    return True if counterparts_occurences[collocation[-1]] < threshold else False
+  if collocation[-1] == query_lemma:
+    return True if counterparts_occurences[collocation[0]] < threshold else False
+
+
+bigrams_filtered = [collocation for collocation in bigrams
+                    if not is_collocation_corrupted(collocation)]
+collocation_occurences = Counter(bigrams_filtered)
 
 
 def get_score(collocation, score='mi'):
@@ -146,6 +162,12 @@ st.download_button(
      data=sorted_df.to_csv(index=False),
      file_name=f'collocations_for_{" ".join(query.split())}.csv'
  )
+
+word = st.text_input(
+    label="Введите лемму, чтобы узнать ее частотность",
+    value="метафора",
+)
+st.write(counterparts_occurences[word])
 
 st.write('Меры ассоциации были рассчитаны по следующим формулам')
 st.latex(r'''
