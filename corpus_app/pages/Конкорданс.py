@@ -13,12 +13,28 @@ logging.info('Starting concordance')
 
 st.title("Конкорданс")
 
+# rel_path = Path.cwd()
+# logging.info("Onto model loading")
+# nlp = spacy.load(rel_path / "model")
+# logging.info("Onto corpus loading")
+# doc_bin = DocBin().from_disk(rel_path / "corpora/corpus.spacy")
+# docs = list(doc_bin.get_docs(nlp.vocab))
+# logging.info("Loaded resources")
+
+
+@st.cache(persist=True, allow_output_mutation=True)
+def load_resources(model_path, corpus_path):
+    nlp = spacy.load(model_path)
+    doc_bin = DocBin().from_disk(corpus_path)
+    docs = list(doc_bin.get_docs(nlp.vocab))
+    return nlp, docs
+
+
+logging.info("Onto resource loading")
 rel_path = Path.cwd()
-logging.info("Onto model loading")
-nlp = spacy.load(rel_path / "model")
-logging.info("Onto corpus loading")
-doc_bin = DocBin().from_disk(rel_path / "corpora/corpus.spacy")
-docs = list(doc_bin.get_docs(nlp.vocab))
+model_path = rel_path / "model"
+corpus_path = rel_path / "corpora" / "corpus.spacy"
+nlp, docs = load_resources(model_path, corpus_path)
 logging.info("Loaded resources")
 
 conc_phrase = st.text_input(
