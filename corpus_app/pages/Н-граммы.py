@@ -39,6 +39,9 @@ n = st.select_slider(
     value=2
 )
 
+position = st.selectbox("На каком месте должен быть искомый токен?",
+                        tuple(["на любом"] + [i + 1 for i in range(n)]))
+
 consider_punctuation = st.checkbox('Учитывать пунктуацию')
 consider_digits = st.checkbox('Учитывать цифры')
 consider_stop_words = st.checkbox('Учитывать стоп-слова')
@@ -76,14 +79,14 @@ for idx, doc in enumerate(docs):
 
     if matches:
         matched_docs += 1
-        doc_to_pass = [i.lower_
+        doc_to_pass = [i.lemma_
                        for i in doc[matches[0].start:matches[-1].end + 1]
                        if is_relevant(i)]
-        ngrams = get_ngrams(doc_to_pass, n)
-        for match in set([match.text for match in matches]):
-            for ngram in ngrams:
-                if match in ngram:
-                    matched_ngrams.append(tuple(ngram))
+        ngrams = get_ngrams(doc_to_pass, n - 1 + len(query.split()))
+        match_lemma = matches[0].lemma_
+        for ngram in ngrams:
+            if match_lemma in match_lemma in ' '.join(ngram) :
+                matched_ngrams.append(tuple(ngram))
 
 st.write(f'Всего найдены вхождения в {matched_docs} документов')
 logging.info(f'Appropriate matches are found, onto projecting')
@@ -96,6 +99,6 @@ AgGrid(resulting_df)
 
 st.download_button(
      label="Скачать как таблицу",
-     data=resulting_df.to_csv(index=False, encoding='windows-1251'),
+     data=resulting_df.to_csv(index=False, sep=','),
      file_name=f'ngrams_for_{" ".join(query.split())}.csv'
  )

@@ -85,6 +85,6 @@ AgGrid(conc_df)
 st.write(f'Найдено {conc_df.shape[0]} вхождений')
 st.download_button(
      label="Скачать как таблицу",
-     data=conc_df.to_csv(index=False),
+     data=conc_df.to_csv(index=False, sep=','),
      file_name=f'contexts_for_{" ".join(" ".join(conc_phrase.split()).split())}.csv'
  )

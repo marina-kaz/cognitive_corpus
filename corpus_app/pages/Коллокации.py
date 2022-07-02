@@ -14,13 +14,6 @@ logging.info('Starting collocations')
 
 st.title("Коллокации")
 
-# rel_path = Path.cwd()
-# logging.info("Onto model loading")
-# nlp = spacy.load(rel_path / "model")
-# logging.info("Onto corpus loading")
-# doc_bin = DocBin().from_disk(rel_path / "corpora/corpus.spacy")
-# docs = list(doc_bin.get_docs(nlp.vocab))
-
 
 @st.cache(persist=True, allow_output_mutation=True)
 def load_resources(model_path, corpus_path):
@@ -87,22 +80,14 @@ def get_relevant_doc(doc):
     return [token for token in doc if is_relevant(token)]
 
 
-def get_ngrams(tokens, n):
-    ngrams = []
-    for idx in range(len(tokens) - n + 1):
-        ngram = tokens[idx:idx+n]
-        ngrams.append(ngram)
-    return ngrams
-
-
 def get_relevant_left(match):
-    for idx in range(1, 100000):
+    for idx in range(1, match.start):
         if is_relevant(match.doc[match.start - idx]):
             return match.doc[match.start - idx]
 
 
 def get_relevant_right(match):
-    for idx in range(0, 100000):
+    for idx in range(0, len(match.doc) - match.start - len(query.split())):
         if is_relevant(match.doc[match.end + idx]):
             return match.doc[match.end + idx]
 
@@ -120,12 +105,14 @@ for doc in docs:
         for match in matches:
 
             left_neighbor = get_relevant_left(match)
-            counterparts.append(left_neighbor.lemma_)
-            bigrams.append((left_neighbor.lemma_, match.lemma_))
+            if left_neighbor:
+                counterparts.append(left_neighbor.lemma_)
+                bigrams.append((left_neighbor.lemma_, match.lemma_))
 
             right_neighbor = get_relevant_right(match)
-            counterparts.append(right_neighbor.lemma_)
-            bigrams.append((match.lemma_, right_neighbor.lemma_))
+            if right_neighbor:
+                counterparts.append(right_neighbor.lemma_)
+                bigrams.append((match.lemma_, right_neighbor.lemma_))
             query_lemma = match.lemma_
 
 logging.info(f'Appropriate matches are found, onto scores calculating')
@@ -200,8 +187,8 @@ AgGrid(df.sort_values(by=[to_sort_by], ascending=False))
 sorted_df = df.sort_values(by=[to_sort_by], ascending=False)
 st.download_button(
      label="Скачать как таблицу",
-     data=sorted_df.to_csv(index=False),
-     file_name=f'collocations_for_{" ".join(query.split())}.csv'
+     data=sorted_df.to_csv(index=False, sep=','),
+     file_name=f'collocations_for_{"_".join(query.split())}.csv'
  )
 
 word = st.text_input(
