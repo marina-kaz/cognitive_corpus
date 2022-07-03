@@ -25,7 +25,7 @@ def load_resources(model_path, corpus_path):
 logging.info("Onto resource loading")
 rel_path = Path.cwd()
 model_path = rel_path / "model"
-corpus_path = rel_path / "corpora" / "large_corpus.spacy"
+corpus_path = rel_path / "corpus" / "large_corpus.spacy"
 nlp, docs = load_resources(model_path, corpus_path)
 logging.info("Loaded resources")
 

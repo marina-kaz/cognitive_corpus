@@ -15,10 +15,6 @@ if not Path("corpus").is_dir():
     shutil.unpack_archive(Path.cwd() / "corpus_app" / "corpus.zip")
 
 
-logging.info('CURR WORKING DIRECTORY\n' + str(Path.cwd()))
-logging.info('CWD CONTENTS\n' + '\n'.join([str(i.name) for i in Path.cwd().iterdir()]))
-logging.info('CORPORA CONTENTS\n' + '\n'.join([i.name for i in (Path.cwd() / 'corpus').iterdir()]))
-
 st.title("Работа с корпусом")
 
 st.markdown('''
@@ -43,7 +39,6 @@ logging.info("Onto resource loading")
 rel_path = Path.cwd()
 model_path = rel_path / "model"
 corpus_path = rel_path / "corpus" / "large_corpus.spacy"
-load_resources(model_path, corpus_path)
 nlp, docs = load_resources(model_path, corpus_path)
 logging.info("Loaded resources")
 
