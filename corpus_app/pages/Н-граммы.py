@@ -24,7 +24,7 @@ def load_resources(model_path, corpus_path):
 logging.info("Onto resource loading")
 rel_path = Path.cwd()
 model_path = rel_path / "model"
-corpus_path = rel_path / "corpora" / "corpus.spacy"
+corpus_path = rel_path / "corpora" / "large_corpus.spacy"
 nlp, docs = load_resources(model_path, corpus_path)
 logging.info("Loaded resources")
 
@@ -71,6 +71,21 @@ def is_relevant(token):
     return True
 
 
+def find_position(sequence, subsequence):
+  streak = 0
+  for idx in range(len(sequence)):
+    for step in range(len(subsequence)):
+      if idx + step > len(sequence) - 1:
+        return False
+      if sequence[idx + step] == subsequence[step]:
+        streak += 1
+      else:
+        streak = 0
+      if streak == len(subsequence):
+        return idx + 1
+  return False
+
+
 matched_docs = 0
 matched_ngrams = []
 
@@ -84,9 +99,16 @@ for idx, doc in enumerate(docs):
                        if is_relevant(i)]
         ngrams = get_ngrams(doc_to_pass, n - 1 + len(query.split()))
         match_lemma = matches[0].lemma_
-        for ngram in ngrams:
-            if match_lemma in match_lemma in ' '.join(ngram) :
-                matched_ngrams.append(tuple(ngram))
+        if position == 'на любом':
+            matched_ngrams.extend([tuple(ngram)
+                                   for ngram in ngrams
+                                   if find_position(ngram,
+                                                    match_lemma.split())])
+        else:
+            matched_ngrams.extend([tuple(ngram)
+                                   for ngram in ngrams
+                                   if position == find_position(ngram,
+                                                                match_lemma.split())])
 
 st.write(f'Всего найдены вхождения в {matched_docs} документов')
 logging.info(f'Appropriate matches are found, onto projecting')

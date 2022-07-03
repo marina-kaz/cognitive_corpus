@@ -26,7 +26,7 @@ def load_resources(model_path, corpus_path):
 logging.info("Onto resource loading")
 rel_path = Path.cwd()
 model_path = rel_path / "model"
-corpus_path = rel_path / "corpora" / "corpus.spacy"
+corpus_path = rel_path / "corpora" / "large_corpus.spacy"
 nlp, docs = load_resources(model_path, corpus_path)
 logging.info("Loaded resources")
 
@@ -96,8 +96,8 @@ phrase_matcher = PhraseMatcher(nlp.vocab, attr="LEMMA")
 phrase_matcher.add(query, [nlp(query)])
 
 query_occurences = 0
-counterparts = []
 bigrams = []
+contexts = {}
 for doc in docs:
     matches = phrase_matcher(doc, as_spans=True)
     if matches:
@@ -106,13 +106,13 @@ for doc in docs:
 
             left_neighbor = get_relevant_left(match)
             if left_neighbor:
-                counterparts.append(left_neighbor.lemma_)
                 bigrams.append((left_neighbor.lemma_, match.lemma_))
+                contexts[bigrams[-1]] = match.doc[match.start - 15: match.end + 15]
 
             right_neighbor = get_relevant_right(match)
             if right_neighbor:
-                counterparts.append(right_neighbor.lemma_)
                 bigrams.append((match.lemma_, right_neighbor.lemma_))
+                contexts[bigrams[-1]] = match.doc[match.start - 15: match.end + 15]
             query_lemma = match.lemma_
 
 logging.info(f'Appropriate matches are found, onto scores calculating')
@@ -171,6 +171,9 @@ t_scores = [get_score(collocation, score='t')
 dice_scores = [get_score(collocation, score='dice')
                for collocation in collocation_occurences.keys()
                if is_collocation_acceptable(collocation, condition)]
+context = ['...' + str(contexts[collocation]).replace('\n', '') + '...'
+           for collocation in collocation_occurences.keys()
+           if is_collocation_acceptable(collocation, condition)]
 
 logging.info(f'Scores calculated, onto projecting')
 
@@ -179,7 +182,8 @@ df = pd.DataFrame({'коллокация': [' + '.join(collocation)
                                   if is_collocation_acceptable(collocation, condition)],
                    'MI': mi_scores,
                    't-score': t_scores,
-                   'Dice': dice_scores})
+                   'Dice': dice_scores,
+                   'контекст': context})
 
 st.write('Результаты отсортированы согласно', to_sort_by)
 AgGrid(df.sort_values(by=[to_sort_by], ascending=False))
