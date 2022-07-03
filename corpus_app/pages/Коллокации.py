@@ -117,9 +117,22 @@ for doc in docs:
 
 logging.info(f'Appropriate matches are found, onto scores calculating')
 
-all_tokens = []
-_ = [all_tokens.extend([token.lemma_ for token in get_relevant_doc(doc)]) for doc in docs]
-counterparts_occurences = Counter(all_tokens)
+# all_tokens = []
+# _ = [all_tokens.extend([token.lemma_ for token in get_relevant_doc(doc)]) for doc in docs]
+# counterparts_occurences = Counter(all_tokens)
+
+
+@st.cache(persist=True, allow_output_mutation=True, suppress_st_warning=True)
+def get_counterpart_occurences():
+    st.write('Для оптимизации работы поиска необходимо один раз подождать подгрузки всех нужных статистик.')
+    all_tokens = []
+    for doc in docs:
+        all_tokens.extend([token.lemma_ for token in get_relevant_doc(doc)])
+    st.write('Спасибо за Ваше терпение!')
+    return all_tokens, Counter(all_tokens)
+
+
+all_tokens, counterparts_occurences = get_counterpart_occurences()
 
 
 def is_collocation_corrupted(collocation):
@@ -177,7 +190,13 @@ context = ['...' + str(contexts[collocation]).replace('\n', '') + '...'
 
 logging.info(f'Scores calculated, onto projecting')
 
-df = pd.DataFrame({'коллокация': [' + '.join(collocation)
+def split_into_words(collocation):
+    words = []
+    for word in collocation:
+        words.extend(word.split())
+    return words
+
+df = pd.DataFrame({'коллокация': [' + '.join(split_into_words(collocation))
                                   for collocation in collocation_occurences.keys()
                                   if is_collocation_acceptable(collocation, condition)],
                    'MI': mi_scores,
