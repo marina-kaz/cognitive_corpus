@@ -9,17 +9,15 @@ from spacy.tokens import DocBin
 
 logging.info('Onto model unpacking')
 if not Path("model").is_dir():
-    shutil.unpack_archive(Path.cwd() / "corpus_app" / "model.zip",
-                          Path.cwd() / "model")
+    shutil.unpack_archive(Path.cwd() / "corpus_app" / "model.zip")
 logging.info('Onto corpora unpacking')
-if not Path("corpora").is_dir():
-    shutil.unpack_archive(Path.cwd() / "corpus_app" / "corpora.zip",
-                          Path.cwd())
+if not Path("corpus").is_dir():
+    shutil.unpack_archive(Path.cwd() / "corpus_app" / "corpus.zip")
 
 
 logging.info('CURR WORKING DIRECTORY\n' + str(Path.cwd()))
 logging.info('CWD CONTENTS\n' + '\n'.join([str(i.name) for i in Path.cwd().iterdir()]))
-logging.info('CORPORA CONTENTS\n' + '\n'.join([i.name for i in (Path.cwd() / 'corpora').iterdir()]))
+logging.info('CORPORA CONTENTS\n' + '\n'.join([i.name for i in (Path.cwd() / 'corpus').iterdir()]))
 
 st.title("Работа с корпусом")
 
@@ -33,25 +31,21 @@ st.markdown('''
 st.markdown('''##### Пожалуйста, дождитесь окончания работы функции load_resources.''')
 st.write('Это займет около минуты')
 
-# @st.cache(persist=True, allow_output_mutation=True)
-# def load_resources(model_path, corpus_path):
-#     try:
-#         nlp = spacy.load(model_path)
-#         doc_bin = DocBin().from_disk(corpus_path)
-#         docs = list(doc_bin.get_docs(nlp.vocab))
-#         return nlp, docs
-#     except:
-#         logging.info(Path.cwd())
-#         logging.info([i for i in Path.cwd().iterdir()])
+@st.cache(persist=True, allow_output_mutation=True)
+def load_resources(model_path, corpus_path):
+    nlp = spacy.load(model_path)
+    doc_bin = DocBin().from_disk(corpus_path)
+    docs = list(doc_bin.get_docs(nlp.vocab))
+    return nlp, docs
 
 
-# logging.info("Onto resource loading")
-# rel_path = Path.cwd()
-# model_path = rel_path / "model"
-# corpus_path = rel_path / "corpora" / "large_corpus.spacy"
-# load_resources(model_path, corpus_path)
-# nlp, docs = load_resources(model_path, corpus_path)
+logging.info("Onto resource loading")
+rel_path = Path.cwd()
+model_path = rel_path / "model"
+corpus_path = rel_path / "corpus" / "large_corpus.spacy"
+load_resources(model_path, corpus_path)
+nlp, docs = load_resources(model_path, corpus_path)
 logging.info("Loaded resources")
 
-# st.write('Спасибо за ожидание!')
-# st.write(f'Загруженный корпус содержит {len(docs)} документов')
+st.write('Спасибо за ожидание!')
+st.write(f'Загруженный корпус содержит {len(docs)} документов')

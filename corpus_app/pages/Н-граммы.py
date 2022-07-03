@@ -13,6 +13,7 @@ logging.info('Starting n-grams')
 
 st.title("Н-граммы")
 
+
 @st.cache(persist=True, allow_output_mutation=True)
 def load_resources(model_path, corpus_path):
     nlp = spacy.load(model_path)
