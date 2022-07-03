@@ -28,10 +28,14 @@ st.write('Это займет около минуты')
 
 @st.cache(persist=True, allow_output_mutation=True)
 def load_resources(model_path, corpus_path):
-    nlp = spacy.load(model_path)
-    doc_bin = DocBin().from_disk(corpus_path)
-    docs = list(doc_bin.get_docs(nlp.vocab))
-    return nlp, docs
+    try:
+        nlp = spacy.load(model_path)
+        doc_bin = DocBin().from_disk(corpus_path)
+        docs = list(doc_bin.get_docs(nlp.vocab))
+        return nlp, docs
+    except FileNotFoundError:
+        print(Path.cwd())
+        print([i for i in Path.cwd().iterdir()])
 
 
 logging.info("Onto resource loading")
