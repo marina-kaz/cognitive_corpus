@@ -68,13 +68,19 @@ def get_concordance_item(match):
     )
     return left_context, rel_span, right_context, meta
 
-
-conc_items = set([get_concordance_item(match) for match in matches])
+conc_items = [get_concordance_item(match) for match in matches]
+n_occurences = len(conc_items)
+conc_items = set(conc_items)
 logging.info(f'Found {len(conc_items)} concordances, onto projeting')
 conc_df = pd.DataFrame(conc_items, columns=["Левый контекст", "Слово/фраза",
                                             "Правый контекст", "Источник"])
 AgGrid(conc_df)
-st.write(f'Найдено {conc_df.shape[0]} вхождений')
+
+corpus_volume = 0
+for doc in docs:
+    corpus_volume += len(doc)
+st.write(f'Найдено {n_occurences} вхождений, IPM: {(n_occurences / corpus_volume) * 1000000}')
+
 st.download_button(
      label="Скачать как таблицу",
      data=conc_df.to_csv(index=False, sep=','),
