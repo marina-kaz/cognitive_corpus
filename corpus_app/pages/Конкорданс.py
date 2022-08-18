@@ -38,10 +38,12 @@ phrase_matcher = PhraseMatcher(nlp.vocab, attr="LEMMA")
 phrase_matcher.add(conc_phrase, [nlp(conc_phrase)])
 
 matches = []
+
 for idx, doc in enumerate(docs):
     match = phrase_matcher(doc, as_spans=True)
     if match:
         matches.append(match)
+        
 matches = list(chain.from_iterable(matches))
 logging.info('Found appropriate matches')
 
@@ -52,20 +54,24 @@ def get_concordance_item(match):
     """
     rel_span = match.text
     left_context, right_context = '', ''
+    
     for sentence in match.doc.sents:
         sentence_matches = phrase_matcher(sentence, as_spans=True)
         if not sentence_matches:
             continue
         for sentence_match in sentence_matches:
-            left_context = match.doc[sentence.start:sentence_match.start]
-            right_context = match.doc[sentence_match.end:sentence.end]
+            left_context = match.doc[sentence.start:sentence_match.start].text_with_ws
+            right_context = match.doc[sentence_match.end:sentence.end].text_with_ws
+            
     doc_meta = match.doc.user_data
+    
     meta = (
         f"Автор: {doc_meta['author']}\n\n"
         f"Заголовок: {doc_meta['title']}\n\n"
         f"Источник: {doc_meta['source']}\n\n"
         f"URL: {doc_meta['url']}"
     )
+    
     return left_context, rel_span, right_context, meta
 
 conc_items = [get_concordance_item(match) for match in matches]
@@ -77,8 +83,10 @@ conc_df = pd.DataFrame(conc_items, columns=["Левый контекст", "Сл
 AgGrid(conc_df)
 
 corpus_volume = 0
+
 for doc in docs:
     corpus_volume += len(doc)
+    
 st.write(f'Найдено {n_occurences} вхождений, IPM: {(n_occurences / corpus_volume) * 1000000}')
 
 st.download_button(
