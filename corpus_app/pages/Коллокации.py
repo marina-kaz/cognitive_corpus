@@ -122,7 +122,7 @@ logging.info(f'Appropriate matches are found, onto scores calculating')
 # counterparts_occurences = Counter(all_tokens)
 
 
-@st.cache(persist=True, allow_output_mutation=True, suppress_st_warning=True)
+@st.cache(hash_funcs={spacy.tokens.doc.Doc: lambda _: None}, persist=True, allow_output_mutation=True, suppress_st_warning=True)
 def get_counterpart_occurences():
     st.write('Для оптимизации работы поиска необходимо один раз подождать подгрузки всех нужных статистик.')
     all_tokens = []
